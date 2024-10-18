@@ -243,3 +243,21 @@ Aquest script JavaScript s'executa quan el document HTML està completament carr
 
 5. **Gestió d'errors**: Captura qualsevol error que pugui ocórrer durant el procés i mostra un missatge d'error a la consola i una alerta a l'usuari.
 
+# Probes
+
+## /alumne/loadAlumnes
+
+### Fitxer csv:
+```
+DescAula,Edifici,Pis,NomAlumne,Cicle,Curs,Grup
+A53,MediaTic,5,Josep Lopez,DAW,2,B
+A01,MediaTic,1,Pere Perez,DAW,1,B
+T41,MediaTic,4,Martina Garcia,SMX,2,C
+```
+### Resposta
+![alt text](screenshots/image.png)
+
+### Taula Aula
+![alt text](screenshots/image-2.png)
+### Taula Alumne
+![alt text](screenshots/image-1.png)
