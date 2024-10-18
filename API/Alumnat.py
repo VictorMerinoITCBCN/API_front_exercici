@@ -167,6 +167,27 @@ class Alumnat:
         finally:
             Connection.close()
 
+    #Fa un insert amb una llista de alumnes
+    @staticmethod
+    def add_many_students(student_list):
+        try:
+            conn = Connection.get_connection()
+            cursor = conn.cursor()
+            #Query per fer un insert i en cas de que l'alumne ja existeixi, el reescriu 
+            query = "INSERT INTO Alumne (IdAula, NomAlumne, Cicle, Curs, Grup) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE NomAlumne = VALUES(NomAlumne), Cicle = VALUES(Cicle), Curs = VALUES(Curs), Grup = VALUES(Grup)"
+
+            values = list([(student["id_aula"], student["nom"], student["cicle"], student["curs"], student["grup"]) for student in student_list])
+            cursor.executemany(query, values)
+            conn.commit()
+
+            num_of_students = cursor.rowcount
+
+            return {"status": 1,"message": f"{num_of_students} alumnes afegits correctament"}
+        except Exception as e:
+            return {"status": -1, "message": f"Connection error: {e}"}
+        finally:
+            Connection.close()
+
     #Afegeix alumnes i aules desde un fitxer csv
     @staticmethod
     async def add_students_from_csv(file):
@@ -175,11 +196,14 @@ class Alumnat:
         try: content = await csv_file.get_content()
         except Exception as e: return {"status": -1, "message": str(e)}
 
+        #S'inicien la llista per les respostes del servidor i la llista per els alumnes per afegir 
         response = []
+        student_list = []
         #Itera per totes les files
         for row in content:
             #Comproba si es una fila valida
             if not Alumnat.is_valid_row(row): 
+                #Afegiex el missatge d'alumne no valid a la resposta
                 response.append({"status": -1, "message": f"Alumne no valid: {row}"})
                 continue
 
@@ -188,16 +212,18 @@ class Alumnat:
             if id_aula == -1:
                 classrom = Aula.formate_classrom(row[:3])
                 aula_res = Aula.add(classrom)
+                #Afegeix el missatge de 'Aula afegida' a la resposta
                 response.append(aula_res)
                 id_aula = aula_res["id_aula"]
 
             #afegeix la id de l'aula a la fila en la posisió 3, on es troba la informació del alumne
             row.insert(3,id_aula)
             student = Alumnat.formate_new_student(row[3:])
-            
-            #Afegeix l'alumne
-            student_res = Alumnat.add_student(student)
-            response.append(student_res)
+            #Afegeix l'alumne a la llista d'alumnes
+            student_list.append(student)
+        
+        res_alumnes = Alumnat.add_many_students(student_list)
+        response.append(res_alumnes)
         return response
 
     #Comproba si una fila del csv conté valors valids
